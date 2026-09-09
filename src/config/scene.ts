@@ -67,9 +67,9 @@ export const CAMERA = {
    * dollies back until both are satisfied, so a tall phone and a wide desktop
    * both keep the bag and the gloves on screen without per-device tweaking.
    */
-  frameHalfHeight: 1.5,
+  frameHalfHeight: 1.78,
   frameHalfWidth: 0.8,
-  minDistance: 3.2,
+  minDistance: 3.6,
   maxDistance: 6.0,
 } as const;
 
