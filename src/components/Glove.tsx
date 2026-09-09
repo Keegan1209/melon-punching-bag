@@ -78,8 +78,8 @@ function GloveImpl({ side }: GloveProps) {
   return (
     <group ref={groupRef} rotation={[idle.rotation[0], idle.rotation[1], idle.rotation[2]]}>
       {theme.gloves.model ? (
-        /* Mirrored for the left hand. Negative scale inverts winding, so the
-           material has to render both faces or the glove looks inside out. */
+        /* One hand is the other mirrored. Negative scale inverts winding, so
+           only that hand needs both faces rendered. */
         <group scale={[mirror, 1, 1]}>
           <ThemedModel
             url={theme.gloves.model}
@@ -87,7 +87,7 @@ function GloveImpl({ side }: GloveProps) {
             tintMaterials={theme.gloves.tintMaterials}
             fitToSize={theme.gloves.modelSize}
             rotation={theme.gloves.modelRotation}
-            doubleSided
+            doubleSided={mirror === -1}
           />
         </group>
       ) : (

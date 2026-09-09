@@ -28,7 +28,13 @@ export interface Theme {
     model: string | null;
     /** Empty array keeps a textured model's own colours. */
     tintMaterials?: readonly string[];
-    /** Largest dimension of the glove model, in world units. */
+    /**
+     * Largest dimension of the glove model, in world units.
+     *
+     * Sized together with the idle anchors: big enough that the fist reads at
+     * the bottom of the frame, while the long cuff below it still falls off
+     * the bottom edge rather than being clipped into a stray-looking lump.
+     */
     modelSize: number;
     /**
      * Orientation offset for the model, so its knuckles lead the punch.
@@ -59,7 +65,8 @@ export interface Theme {
     logoWidth: number;
     /** Where the logo sits on the back wall, as [x, y] in world units. */
     logoPosition: readonly [number, number];
-    /** The painted band the logo sits on. */
+    /** The painted band the logo sits on. Keep it near wallColor: a dark
+     *  slab reads as a hole in the wall rather than paint on it. */
     bandColor: string;
     bandHeight: number;
     /** Pinstripe along the band's lower edge. */
@@ -90,7 +97,7 @@ export const theme: Theme = {
     model: "/models/glove.glb",
     // The model is textured, so tinting would multiply colour over artwork.
     tintMaterials: [],
-    modelSize: 0.44,
+    modelSize: 0.52,
     modelRotation: [0, 0, 0],
     leftColor: "#D82E2E",
     rightColor: "#D82E2E",
@@ -112,7 +119,7 @@ export const theme: Theme = {
     // Offset left of centre: the bag hides the middle of the wall from the
     // camera, so anything centred would be permanently behind it.
     logoPosition: [-1.45, 2.16],
-    bandColor: "#141110",
+    bandColor: "#7F6F63",
     bandHeight: 0.74,
     accentColor: "#ED174C",
   },

@@ -110,15 +110,19 @@ export const GLOVE = {
    * metres in front of the camera. Expressing it this way keeps both gloves in
    * the same on-screen position whether the frame is a tall phone or a wide
    * desktop -- fixed world positions fall outside a portrait frustum.
+   *
+   * Y sits past -1, below the frame, on purpose: the glove model carries a
+   * long dark cuff, and letting it run off the bottom edge leaves just the
+   * fist in shot. Framed higher, the clipped cuff reads as a stray object.
    */
   idle: {
     left: {
-      screen: [-0.8, -0.78] as const,
+      screen: [-0.84, -0.85] as const,
       depth: 1.75,
       rotation: [-0.35, 0.45, 0.25] as const,
     },
     right: {
-      screen: [0.8, -0.92] as const,
+      screen: [0.84, -0.95] as const,
       depth: 1.75,
       rotation: [-0.35, -0.45, -0.25] as const,
     },

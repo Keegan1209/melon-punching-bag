@@ -11,9 +11,10 @@ const RELIEF = 0.02;
 /**
  * Painted signage on the gym's back wall.
  *
- * A dark band with the brand tag mounted on it, the way a gym paints its
- * livery across a wall. The band is dark rather than brand-coloured because
- * the logo is itself brand-coloured and would vanish into a matching stripe.
+ * A painted band with the brand tag mounted on it, the way a gym paints its
+ * livery across a wall. The band is tinted close to the wall so it reads as
+ * paint rather than a hole cut in it; the logo and a thin accent line are the
+ * only things meant to carry contrast.
  *
  * The logo is deliberately off-centre: from the camera the bag occupies the
  * middle of the wall, so a centred mark would never be visible.
@@ -39,12 +40,12 @@ function WallBrandingImpl() {
       </mesh>
 
       <mesh position={[0, logoY - bandHeight / 2 + 0.03, RELIEF * 1.5]}>
-        <planeGeometry args={[ROOM.width, 0.055]} />
+        <planeGeometry args={[ROOM.width, 0.035]} />
         <meshStandardMaterial
           color={accentColor}
           roughness={0.55}
           emissive={accentColor}
-          emissiveIntensity={0.25}
+          emissiveIntensity={0.12}
         />
       </mesh>
 
