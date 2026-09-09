@@ -4,9 +4,9 @@ A mobile-first 3D heavy bag you can hit in the browser. Tap the bag, a glove
 throws a handcrafted punch at the nearest impact zone, and the bag swings with
 weight. No menus, no accounts, no backend.
 
-**Portrait only, on every device.** The canvas is locked to a phone-shaped
-frame and centred; a desktop browser gets the same composition rather than a
-stretched variant nobody tuned.
+**Mobile first, and it fills whatever screen it is given.** The canvas takes
+the full viewport at any aspect, and the framing adapts rather than being
+locked to one shape.
 
 Models are ["Punching bag from Poly by Google"](https://skfb.ly/6YvUS) by
 IronEqual and ["Boxing Glove"](https://sketchfab.com/3d-models/boxing-glove-5b464201104949e09f77f2d1cf8b60c3)
@@ -92,20 +92,32 @@ seventh zone, never touches logic.
 ### `src/config/scene.ts` — where things are
 
 Geometry and physics tuning. `PHYSICS.inertia` is the main weight knob: higher
-is heavier and less responsive. `STAGE` sets the portrait aspect the whole
-experience is locked to; CSS reads it from a custom property so the ratio is
-defined once.
+is heavier and less responsive. `CAMERA.frameHalfHeight` sets how close the
+camera sits, and `GLOVE.idle` places the gloves in viewport coordinates.
 
-## The portrait lock
+## Responsive framing
 
-`#frame` is sized as `min(100vw, 100dvh * aspect)` by `min(100dvh, 100vw /
-aspect)` rather than with `aspect-ratio`. A raw `aspect-ratio` plus a
-`max-width` lets the browser clamp one axis and silently break the ratio;
-taking the min on both keeps it exact. On a phone the frame is full-bleed; on
-anything wider it becomes a centred panel on a dark backdrop.
+The canvas fills the viewport at every aspect. `100dvh` rather than `100vh`,
+because iOS Safari's URL bar and toolbar collapse as you scroll and `vh`
+measures the tallest possible viewport -- with `vh` the bottom of the canvas
+ends up under the toolbar.
 
-Because the aspect is fixed, the camera only ever has one framing to solve, so
-composition is identical everywhere.
+Two things keep the composition stable while the aspect changes:
+
+- **Distance is driven by height, not width.** `CAMERA.frameHalfWidth` is
+  deliberately slack, so the height budget decides the camera distance at every
+  realistic aspect. The bag therefore occupies the same fraction of the screen
+  on a phone and on a desktop; a wider window simply reveals more room to the
+  sides.
+- **Gloves are anchored to the viewport, not to world coordinates.** They
+  resolve from the camera frustum each resize, so they hold the same on-screen
+  position on any device. Fixed world positions fall straight outside a
+  portrait frustum.
+
+The tightest constraint is the strip of back wall between the bag's silhouette
+and the frame edge, where the logo sits. It is narrowest on the tallest phones,
+so `branding.logoWidth` and `logoPosition` are sized for that case. Moving the
+camera closer widens the cone the bag hides and squeezes that strip further.
 
 ## Glove orientation
 

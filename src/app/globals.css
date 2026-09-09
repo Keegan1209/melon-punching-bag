@@ -23,37 +23,18 @@ body {
   user-select: none;
 }
 
-/* Backdrop behind the phone-shaped frame. Only ever seen on wide screens. */
+/*
+ * Fills the viewport on every device.
+ *
+ * `dvh` rather than `vh` because iOS Safari's URL bar and toolbar collapse as
+ * you scroll: `vh` measures the tallest possible viewport, which would push
+ * the bottom of the canvas under the toolbar.
+ */
 #stage {
   position: fixed;
   inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: radial-gradient(circle at 50% 40%, #1c1917 0%, #0b0a09 70%);
-}
-
-/*
- * The portrait frame.
- *
- * Sized from the viewport rather than with `aspect-ratio`, because a raw
- * aspect-ratio plus max-width lets the browser clamp one axis and silently
- * break the ratio. Taking the min on both axes keeps it exact: full-bleed on a
- * phone, a centred portrait panel on anything wider.
- */
-#frame {
-  position: relative;
-  width: min(100vw, calc(100dvh * var(--stage-aspect)));
-  height: min(100dvh, calc(100vw / var(--stage-aspect)));
-  overflow: hidden;
-}
-
-/* Only reads as a framed panel when there is a backdrop to sit on. */
-@media (min-aspect-ratio: 9 / 19.5) {
-  #frame {
-    border-radius: 14px;
-    box-shadow: 0 24px 70px rgb(0 0 0 / 65%);
-  }
+  height: 100dvh;
+  background: #171310;
 }
 
 canvas {

@@ -7,9 +7,7 @@ import { ExperienceLoader } from "@/components/ExperienceLoader";
 export default function Page() {
   return (
     <main id="stage">
-      <div id="frame">
-        <ExperienceLoader />
-      </div>
+      <ExperienceLoader />
     </main>
   );
 }

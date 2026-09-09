@@ -61,7 +61,13 @@ export interface Theme {
   /** Signage on the gym's back wall. Set `logo` to null to remove it. */
   branding: {
     logo: string | null;
-    /** Logo width in world units; its height follows the artwork's aspect. */
+    /**
+     * Logo width in world units; its height follows the artwork's aspect.
+     *
+     * It has to fit the strip of wall between the bag's silhouette and the
+     * frame edge, which is narrowest on the tallest phones -- sized for that
+     * case, with margin, rather than for a comfortable desktop window.
+     */
     logoWidth: number;
     /** Where the logo sits on the back wall, as [x, y] in world units. */
     logoPosition: readonly [number, number];
@@ -97,7 +103,7 @@ export const theme: Theme = {
     model: "/models/glove.glb",
     // The model is textured, so tinting would multiply colour over artwork.
     tintMaterials: [],
-    modelSize: 0.52,
+    modelSize: 0.55,
     modelRotation: [0, 0, 0],
     leftColor: "#D82E2E",
     rightColor: "#D82E2E",
@@ -115,10 +121,12 @@ export const theme: Theme = {
   },
   branding: {
     logo: "/branding/logo.svg",
-    logoWidth: 1.15,
+    logoWidth: 1.02,
     // Offset left of centre: the bag hides the middle of the wall from the
-    // camera, so anything centred would be permanently behind it.
-    logoPosition: [-1.45, 2.16],
+    // camera, so anything centred would be permanently behind it. Pushed
+    // further out when the camera moved closer -- a nearer bag covers a wider
+    // cone of the wall behind it.
+    logoPosition: [-1.57, 2.16],
     bandColor: "#7F6F63",
     bandHeight: 0.74,
     accentColor: "#ED174C",

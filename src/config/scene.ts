@@ -88,15 +88,20 @@ export const PHYSICS = {
 
 export const CAMERA = {
   height: 1.55,
-  lookAt: [0, 1.24, 0] as const,
+  lookAt: [0, 1.38, 0] as const,
   fov: 45,
   /**
    * Framing budget, in world units, measured from the view centre. The rig
-   * dollies back until both are satisfied, so a tall phone and a wide desktop
-   * both keep the bag and the gloves on screen without per-device tweaking.
+   * dollies back until both are satisfied.
+   *
+   * The width budget is deliberately slack: gloves are anchored to the
+   * viewport, so they cannot fall off the sides, and the only thing it still
+   * guards is the bag filling an ultra-narrow screen. Keeping it slack means
+   * height decides the distance at every realistic aspect, so the bag is the
+   * same size on screen on a phone and on a desktop.
    */
-  frameHalfHeight: 1.86,
-  frameHalfWidth: 0.8,
+  frameHalfHeight: 1.52,
+  frameHalfWidth: 0.55,
   minDistance: 3.6,
   maxDistance: 6.0,
 } as const;
@@ -111,20 +116,24 @@ export const GLOVE = {
    * the same on-screen position whether the frame is a tall phone or a wide
    * desktop -- fixed world positions fall outside a portrait frustum.
    *
-   * Y sits past -1, below the frame, on purpose: the glove model carries a
-   * long dark cuff, and letting it run off the bottom edge leaves just the
-   * fist in shot. Framed higher, the clipped cuff reads as a stray object.
+   * Raised far enough that the whole glove, cuff included, sits inside the
+   * frame at rest. The cuff only looked like a stray object when the bottom
+   * edge cut through it; shown whole, it reads as the wrist it is.
+   *
+   * The roll leans each glove inward, toward the bag, the way a guard sits.
+   * Rolling the other way splays the knuckles apart and reads as a shrug.
+   * Only the resting pose: each zone's wrist rotation still owns the impact.
    */
   idle: {
     left: {
-      screen: [-0.84, -0.85] as const,
+      screen: [-0.84, -0.58] as const,
       depth: 1.75,
-      rotation: [-0.35, 0.45, 0.25] as const,
+      rotation: [-0.33, 0.5, -0.33] as const,
     },
     right: {
-      screen: [0.84, -0.95] as const,
+      screen: [0.84, -0.64] as const,
       depth: 1.75,
-      rotation: [-0.35, -0.45, -0.25] as const,
+      rotation: [-0.33, -0.5, 0.33] as const,
     },
   },
 } as const;
@@ -134,22 +143,6 @@ export const GLOVE = {
  * edges into empty space, at any viewport aspect. It is a single box, so the
  * extra size costs nothing.
  */
-/**
- * The experience is portrait-only, on every device.
- *
- * The canvas is locked to a phone-shaped frame and centred, rather than
- * filling the window: this is designed as a mobile interaction, and a desktop
- * browser gets the same composition instead of a stretched variant nobody
- * tuned. Camera framing therefore only ever has one aspect to solve for.
- */
-export const STAGE = {
-  aspectWidth: 9,
-  aspectHeight: 19.5,
-} as const;
-
-/** Width / height. CSS sizes the frame from this. */
-export const STAGE_ASPECT = STAGE.aspectWidth / STAGE.aspectHeight;
-
 export const ROOM = {
   width: 16,
   depth: 16,
