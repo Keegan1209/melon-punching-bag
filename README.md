@@ -4,6 +4,10 @@ A mobile-first 3D heavy bag you can hit in the browser. Tap the bag, a glove
 throws a handcrafted punch at the nearest impact zone, and the bag swings with
 weight. No menus, no accounts, no backend.
 
+The bag model is ["Punching bag from Poly by Google"](https://skfb.ly/6YvUS) by
+IronEqual, licensed [CC BY 4.0](http://creativecommons.org/licenses/by/4.0/).
+See [CREDITS.md](CREDITS.md).
+
 Built as a reusable, brand-neutral engine: colours, models, sounds and feel are
 all configuration, not code.
 
@@ -89,23 +93,31 @@ is heavier and less responsive.
 
 ### Models
 
-Drop `bag.glb` and `glove.glb` into `public/models`, then point the theme at
-them:
+The bag ships as a GLB; gloves are still procedural. Drop a replacement into
+`public/models` and point the theme at it:
 
 ```ts
-bag:    { model: "/models/bag.glb", ... },
+bag:    { model: "/models/bag.glb", tintMaterials: ["lambert2SG"], ... },
 gloves: { model: "/models/glove.glb", ... },
 ```
 
-Two requirements:
+**Models are fitted automatically.** A bag GLB is scaled and positioned from its
+own bounding box so it hangs from `BAG.pivotY` and clears the floor by
+`BAG.floorClearance`, whatever size it was authored at. You do not need to
+pre-scale it or centre it on its origin.
 
-- **Centre the model on its origin.** Impact zones are measured in the bag's
-  local space, so an off-centre origin shifts every zone.
-- **Compress with Meshopt, not Draco.** The Meshopt decoder ships with drei and
-  needs no extra files. Draco would require hosting a decoder in `public/`.
+**Name the materials you want tinted.** `tintMaterials` limits the theme colour
+to the bag body; without it, the chain and bracket would be painted the same
+colour as the bag. Omit it to tint everything. Textures and maps survive — only
+the base colour is overridden.
 
-The theme colour is applied as a tint to each material's base colour, so
-textures and maps on your model survive.
+**Re-measure the envelope if proportions change.** `BAG.radius`, `BAG.height`
+and `BAG.suspension` in `src/config/scene.ts` describe the bag body that fitting
+produces, and every impact zone derives from them. A bag with a much longer
+chain or a squatter body needs those three numbers updated; nothing else.
+
+**Compress with Meshopt, not Draco.** The Meshopt decoder ships with drei and
+needs no extra files. Draco would require hosting a decoder in `public/`.
 
 ### Sounds
 

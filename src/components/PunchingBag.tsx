@@ -1,15 +1,15 @@
 "use client";
 
-import { memo, useCallback, useEffect, useRef } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef } from "react";
 import type { Group } from "three";
 import { Vector3 } from "three";
 import type { ThreeEvent } from "@react-three/fiber";
-import { BAG, BAG_COM_OFFSET } from "@/config/scene";
+import { BAG, BAG_CENTER_Y, BAG_COM_OFFSET, PROCEDURAL_BODY_LENGTH } from "@/config/scene";
 import { theme } from "@/config/theme";
 import { useGameEngine } from "./GameProvider";
 import { ThemedModel } from "./ThemedModel";
 
-/** Chain links bridging the ceiling mount and the top of the bag. */
+/** Chain links for the procedural bag, which has no chain of its own. */
 const CHAIN_LINKS = 4;
 
 /** Scratch vector reused on every tap so hit-testing allocates nothing. */
@@ -19,9 +19,33 @@ const localHit = new Vector3();
 function ProceduralBag() {
   return (
     <mesh castShadow>
-      <capsuleGeometry args={[BAG.radius, BAG.bodyLength, 8, 24]} />
+      <capsuleGeometry args={[BAG.radius, PROCEDURAL_BODY_LENGTH, 8, 24]} />
       <meshStandardMaterial color={theme.bag.color} roughness={0.62} metalness={0.06} />
     </mesh>
+  );
+}
+
+/** The chain the procedural bag hangs from. A GLB brings its own. */
+function ProceduralChain() {
+  const spacing = BAG.suspension / CHAIN_LINKS;
+
+  return (
+    <>
+      {Array.from({ length: CHAIN_LINKS }, (_, index) => (
+        <mesh
+          key={index}
+          position={[0, -spacing * (index + 0.5), 0]}
+          rotation={[Math.PI / 2, 0, index % 2 === 0 ? 0 : Math.PI / 2]}
+        >
+          <torusGeometry args={[spacing * 0.5, 0.014, 6, 14]} />
+          <meshStandardMaterial
+            color={theme.environment.chainColor}
+            metalness={0.9}
+            roughness={0.35}
+          />
+        </mesh>
+      ))}
+    </>
   );
 }
 
@@ -34,6 +58,16 @@ function PunchingBagImpl() {
     engine.bindBagPivot(pivotRef.current);
     return () => engine.bindBagPivot(null);
   }, [engine]);
+
+  /**
+   * Where a GLB is hung, expressed in the body group's own space: from the
+   * pivot above it down to the floor clearance below. The model's chain and
+   * bracket occupy whatever of that span its body does not.
+   */
+  const fitToSpan = useMemo(
+    () => ({ top: BAG_COM_OFFSET, bottom: BAG.floorClearance - BAG_CENTER_Y }),
+    []
+  );
 
   /**
    * Convert the world-space hit into the bag's own space before classifying.
@@ -54,28 +88,18 @@ function PunchingBagImpl() {
     [engine]
   );
 
-  const linkSpacing = BAG.chainLength / CHAIN_LINKS;
-
   return (
     <group position={[0, BAG.pivotY, 0]} ref={pivotRef}>
-      {Array.from({ length: CHAIN_LINKS }, (_, index) => (
-        <mesh
-          key={index}
-          position={[0, -linkSpacing * (index + 0.5), 0]}
-          rotation={[Math.PI / 2, 0, index % 2 === 0 ? 0 : Math.PI / 2]}
-        >
-          <torusGeometry args={[linkSpacing * 0.5, 0.014, 6, 14]} />
-          <meshStandardMaterial
-            color={theme.environment.chainColor}
-            metalness={0.9}
-            roughness={0.35}
-          />
-        </mesh>
-      ))}
+      {!theme.bag.model && <ProceduralChain />}
 
       <group ref={bodyRef} position={[0, -BAG_COM_OFFSET, 0]} onPointerDown={handlePointerDown}>
         {theme.bag.model ? (
-          <ThemedModel url={theme.bag.model} color={theme.bag.color} />
+          <ThemedModel
+            url={theme.bag.model}
+            color={theme.bag.color}
+            tintMaterials={theme.bag.tintMaterials}
+            fitToSpan={fitToSpan}
+          />
         ) : (
           <ProceduralBag />
         )}

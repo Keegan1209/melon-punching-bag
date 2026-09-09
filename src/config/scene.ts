@@ -9,21 +9,46 @@
 export const BAG = {
   /** World-space point the bag swings around (top of the chain). */
   pivotY: 3.0,
-  /** Distance from pivot down to the top cap of the bag. */
-  chainLength: 0.5,
-  radius: 0.32,
-  /** Length of the cylindrical section, excluding the two rounded caps. */
-  bodyLength: 1.5,
+  /** Gap left between the bottom of the bag and the floor. */
+  floorClearance: 0.35,
+
+  /**
+   * The bag body's envelope, in world units.
+   *
+   * A GLB is scaled automatically to hang between `pivotY` and
+   * `floorClearance`, so these describe the bag *that fitting produces* -- they
+   * are measured from the shipped model, whose chain and bracket occupy the
+   * space above the body. Swap in a bag with different proportions and these
+   * three numbers need re-measuring; everything else derives from them.
+   */
+  radius: 0.2884,
+  height: 1.7538,
+  /** Pivot down to the top of the bag body: the chain and bracket. */
+  suspension: 0.8962,
+
+  /**
+   * How far past the bag's surface a fist travels to make contact. Roughly the
+   * distance from a glove's centre to its knuckle face.
+   */
+  contactOffset: 0.14,
 } as const;
 
-/** Total bag height including both rounded caps. */
-export const BAG_HEIGHT = BAG.bodyLength + BAG.radius * 2;
+/** Total bag height. */
+export const BAG_HEIGHT = BAG.height;
+
+export const BAG_HALF_HEIGHT = BAG.height / 2;
 
 /** Offset from the pivot down to the bag's centre of mass. */
-export const BAG_COM_OFFSET = BAG.chainLength + BAG_HEIGHT / 2;
+export const BAG_COM_OFFSET = BAG.suspension + BAG_HALF_HEIGHT;
 
 /** World-space Y of the bag's centre at rest. */
 export const BAG_CENTER_Y = BAG.pivotY - BAG_COM_OFFSET;
+
+/** Z of every contact point: just clear of the camera-facing surface. */
+export const CONTACT_Z = BAG.radius + BAG.contactOffset;
+
+/** Cylinder length for the procedural fallback bag, excluding its caps. */
+export const PROCEDURAL_BODY_LENGTH = BAG.height - BAG.radius * 2;
 
 export const PHYSICS = {
   /** Pendulum arm length, drives the natural swing period. */
@@ -32,10 +57,13 @@ export const PHYSICS = {
   /**
    * Rotational inertia, in the region of m*L^2 for a ~40kg bag. Folds mass and
    * radius of gyration into one knob: higher = heavier, less responsive.
-   * Tuned so a clean body shot swings roughly 12 degrees -- a real heavy bag
+   * Tuned so a clean body shot swings roughly 9 degrees -- a real heavy bag
    * barely moves, and the brief asks for weight rather than arcade flailing.
+   * Retuned when the GLB replaced the capsule: the model's body hangs lower
+   * and narrower, which changes every lever arm, so the swing had to be
+   * measured again rather than carried over.
    */
-  inertia: 180,
+  inertia: 205,
   /** Viscous damping on the swing. Higher = settles sooner. */
   damping: 1.15,
   /**
@@ -60,14 +88,14 @@ export const PHYSICS = {
 
 export const CAMERA = {
   height: 1.55,
-  lookAt: [0, 1.35, 0] as const,
+  lookAt: [0, 1.24, 0] as const,
   fov: 45,
   /**
    * Framing budget, in world units, measured from the view centre. The rig
    * dollies back until both are satisfied, so a tall phone and a wide desktop
    * both keep the bag and the gloves on screen without per-device tweaking.
    */
-  frameHalfHeight: 1.78,
+  frameHalfHeight: 1.86,
   frameHalfWidth: 0.8,
   minDistance: 3.6,
   maxDistance: 6.0,

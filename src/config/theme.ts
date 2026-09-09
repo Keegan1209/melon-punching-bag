@@ -4,6 +4,10 @@
  * Nothing in `src/components` or `src/lib` may hardcode a colour, a model path
  * or a tuning number. Reskinning the experience should only ever mean editing
  * this file (or swapping the files it points at).
+ *
+ * Asset credit -- see CREDITS.md:
+ * "Punching bag from Poly by Google" (https://skfb.ly/6YvUS) by IronEqual,
+ * licensed under CC BY 4.0 (http://creativecommons.org/licenses/by/4.0/).
  */
 
 export interface Theme {
@@ -11,11 +15,18 @@ export interface Theme {
     /** Optional GLB. When null, the built-in procedural bag is used. */
     model: string | null;
     color: string;
+    /**
+     * Material names the bag colour is applied to. Omit to tint everything.
+     * A bag model usually carries its chain and bracket as separate materials,
+     * which should keep their own colours.
+     */
+    tintMaterials?: readonly string[];
     /** Global multiplier on every punch impulse. Higher = swingier. */
     swingStrength: number;
   };
   gloves: {
     model: string | null;
+    tintMaterials?: readonly string[];
     leftColor: string;
     rightColor: string;
     cuffColor: string;
@@ -47,8 +58,11 @@ export interface Theme {
 
 export const theme: Theme = {
   bag: {
-    model: null,
-    color: "#4F63FF",
+    model: "/models/bag.glb",
+    color: "#288C28",
+    // The shipped model's three materials: lambert2SG is the bag body,
+    // lambert3SG its chain and straps, lambert4SG the ceiling bracket.
+    tintMaterials: ["lambert2SG"],
     swingStrength: 1.0,
   },
   gloves: {
