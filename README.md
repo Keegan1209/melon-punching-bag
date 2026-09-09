@@ -1,0 +1,157 @@
+# Punching Bag
+
+A mobile-first 3D heavy bag you can hit in the browser. Tap the bag, a glove
+throws a handcrafted punch at the nearest impact zone, and the bag swings with
+weight. No menus, no accounts, no backend.
+
+Built as a reusable, brand-neutral engine: colours, models, sounds and feel are
+all configuration, not code.
+
+## Getting started
+
+```bash
+npm install
+npm run dev
+```
+
+Open <http://localhost:3000>. Nothing else to configure — the project ships with
+procedural geometry and synthesised audio, so it runs with no assets.
+
+| Script              | Purpose                     |
+| ------------------- | --------------------------- |
+| `npm run dev`       | Dev server                  |
+| `npm run build`     | Production build            |
+| `npm run start`     | Serve the production build  |
+| `npm run typecheck` | Type check without emitting |
+
+## Deploying
+
+Push to a Git remote and import the repo on Vercel. It is a stock Next.js App
+Router project — no environment variables, no build configuration, no server
+routes. The page prerenders as static content and the canvas mounts client-side.
+
+## How it works
+
+The load-bearing design decision is that **taps do not aim the gloves.**
+
+A raycast against the bag is used only to classify the hit into one of six
+impact zones. Each zone owns a handcrafted punch — trajectory, wrist rotation,
+contact point, impulse — so every hit lands on a path someone chose. Chasing the
+exact tap coordinate produces stretched, unnatural glove motion; this keeps
+every punch cinematic while still feeling like you hit where you tapped.
+
+Physics is slaved to the animation clock, never to the tap. The impulse is
+applied on the exact frame the fist reaches the bag, along with the sound and
+the haptic pulse.
+
+```
+tap → raycast → nearest zone → glove → punch timeline
+                                            │
+                                    (contact frame)
+                                            ├── impulse → bag swing
+                                            ├── sound
+                                            └── haptic
+```
+
+### Project layout
+
+```
+src/
+  app/          Next.js shell. The canvas is client-only by necessity.
+  components/   Rendering only. No cross-cutting logic lives here.
+  lib/          The engine: physics, animation, audio, framing.
+  config/       Everything you are meant to edit.
+  store/        UI-facing state. Never per-frame data.
+```
+
+`src/lib/GameEngine.ts` wires it together and owns the frame order: gloves are
+advanced before the bag, so a contact lands on the frame it was generated.
+
+## Configuration
+
+### `src/config/theme.ts` — how it looks
+
+Colours, models, sounds, fog and haptics. Nothing in `components/` or `lib/`
+hardcodes a colour or an asset path, so reskinning means editing this file only.
+
+### `src/config/zones.ts` — how the punches feel
+
+The six impact zones. Each is pure data — trajectory, wrist rotation, contact
+point, impulse direction and strength, timing. Retuning a punch, or adding a
+seventh zone, never touches logic.
+
+### `src/config/scene.ts` — where things are
+
+Geometry and physics tuning. `PHYSICS.inertia` is the main weight knob: higher
+is heavier and less responsive.
+
+## Replacing the assets
+
+### Models
+
+Drop `bag.glb` and `glove.glb` into `public/models`, then point the theme at
+them:
+
+```ts
+bag:    { model: "/models/bag.glb", ... },
+gloves: { model: "/models/glove.glb", ... },
+```
+
+Two requirements:
+
+- **Centre the model on its origin.** Impact zones are measured in the bag's
+  local space, so an off-centre origin shifts every zone.
+- **Compress with Meshopt, not Draco.** The Meshopt decoder ships with drei and
+  needs no extra files. Draco would require hosting a decoder in `public/`.
+
+The theme colour is applied as a tint to each material's base colour, so
+textures and maps on your model survive.
+
+### Sounds
+
+Drop mp3s into `public/sounds` matching the paths in `theme.audio.punch`. They
+are picked at random, avoiding an immediate repeat, with slight pitch variation
+so repeated hits do not sound mechanical.
+
+Until you add them, punches are synthesised in WebAudio — a noise slap over a
+pitch-dropping thud. Missing or undecodable files fall back silently, so the
+experience is never mute.
+
+## Performance
+
+The whole app is **~410 KB gzipped**, against a 3 MB budget — all of the
+remaining headroom is available for real assets.
+
+- One WebGL canvas, one `useFrame` for the entire simulation.
+- **A punch costs zero React re-renders.** The animator mutates vectors in place
+  and the engine writes them straight into the Object3D each frame.
+- Device pixel ratio capped at 2.
+- Static geometry is memoised; the room is a single inside-out box.
+- Delta time is clamped, so returning from a backgrounded tab cannot fling the
+  bag.
+
+## Known limitations
+
+- **iOS has no Web Vibration API.** Haptics are a deliberate no-op on iPhone.
+  There is no reliable web workaround; real haptics there need a native shell.
+- **Audio needs a gesture.** The AudioContext is resumed inside the tap that
+  starts the first punch, which is the only moment iOS permits it.
+- The bag swings on two axes and does not twist. Adding twist means feeding the
+  Y torque, already computed in the cross product, into a third oscillator.
+
+## Extending it
+
+The interaction system is independent of branding, so these are additive:
+
+- **Colour picker / skins / seasonal themes** — write to `theme`.
+- **Score, combo, timer modes** — `src/store/useGameStore.ts` already counts
+  punches and records the last zone hit.
+- **Analytics** — `GameEngine.handleContact` is the single choke point every
+  landed punch passes through.
+- **Rapier** — the bag is a two-axis damped pendulum rather than a rigid-body
+  sim, because one hanging body does not justify a WASM solver or its startup
+  cost. Swapping it out means matching one interface: `applyImpulse()` in, an
+  angle out. Worth doing if gloves ever need real collisions.
+
+In development, the engine is exposed as `window.__punchingBag` for tuning
+zone numbers from the console. That block is dead code in production builds.
