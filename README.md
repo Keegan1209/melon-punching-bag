@@ -4,8 +4,13 @@ A mobile-first 3D heavy bag you can hit in the browser. Tap the bag, a glove
 throws a handcrafted punch at the nearest impact zone, and the bag swings with
 weight. No menus, no accounts, no backend.
 
-The bag model is ["Punching bag from Poly by Google"](https://skfb.ly/6YvUS) by
-IronEqual, licensed [CC BY 4.0](http://creativecommons.org/licenses/by/4.0/).
+**Portrait only, on every device.** The canvas is locked to a phone-shaped
+frame and centred; a desktop browser gets the same composition rather than a
+stretched variant nobody tuned.
+
+Models are ["Punching bag from Poly by Google"](https://skfb.ly/6YvUS) by
+IronEqual and ["Boxing Glove"](https://sketchfab.com/3d-models/boxing-glove-5b464201104949e09f77f2d1cf8b60c3)
+by Incg5764, both [CC BY 4.0](http://creativecommons.org/licenses/by/4.0/).
 See [CREDITS.md](CREDITS.md).
 
 Built as a reusable, brand-neutral engine: colours, models, sounds and feel are
@@ -87,7 +92,31 @@ seventh zone, never touches logic.
 ### `src/config/scene.ts` — where things are
 
 Geometry and physics tuning. `PHYSICS.inertia` is the main weight knob: higher
-is heavier and less responsive.
+is heavier and less responsive. `STAGE` sets the portrait aspect the whole
+experience is locked to; CSS reads it from a custom property so the ratio is
+defined once.
+
+## The portrait lock
+
+`#frame` is sized as `min(100vw, 100dvh * aspect)` by `min(100dvh, 100vw /
+aspect)` rather than with `aspect-ratio`. A raw `aspect-ratio` plus a
+`max-width` lets the browser clamp one axis and silently break the ratio;
+taking the min on both keeps it exact. On a phone the frame is full-bleed; on
+anything wider it becomes a centred panel on a dark backdrop.
+
+Because the aspect is fixed, the camera only ever has one framing to solve, so
+composition is identical everywhere.
+
+## Glove orientation
+
+Both gloves — procedural and GLB — share one convention: **knuckles point along
+local +Y.** At rest that reads as a fist held up in guard. Each zone's
+`wristRotation` then pitches the fist forward by roughly 90 degrees so the
+knuckles lead the punch, with per-zone variation for the angle of attack.
+
+If you swap the glove model, set `theme.gloves.modelRotation` so its knuckles
+end up along +Y and everything else follows. Getting this backwards is not
+subtle: the glove punches cuff-first.
 
 ## Replacing the assets
 
@@ -119,6 +148,10 @@ chain or a squatter body needs those three numbers updated; nothing else.
 **Compress with Meshopt, not Draco.** The Meshopt decoder ships with drei and
 needs no extra files. Draco would require hosting a decoder in `public/`.
 
+**Watch texture weight.** The glove model is 1.5 MB, of which a 1 MB PNG normal
+map is the bulk — for an asset that occupies a fraction of the screen. If the
+budget gets tight, that map is the first thing to drop or downscale.
+
 ### Sounds
 
 Drop mp3s into `public/sounds` matching the paths in `theme.audio.punch`. They
@@ -131,8 +164,9 @@ experience is never mute.
 
 ## Performance
 
-The whole app is **~410 KB gzipped**, against a 3 MB budget — all of the
-remaining headroom is available for real assets.
+Roughly **2 MB** total: ~424 KB gzipped JS, a 46 KB bag model and a 1.5 MB
+glove model. Comfortably inside the 3 MB budget, though the glove's normal map
+is the obvious saving if more room is ever needed.
 
 - One WebGL canvas, one `useFrame` for the entire simulation.
 - **A punch costs zero React re-renders.** The animator mutates vectors in place

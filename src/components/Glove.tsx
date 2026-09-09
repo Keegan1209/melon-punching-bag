@@ -15,7 +15,12 @@ interface GloveProps {
 
 /**
  * Built-in glove, used whenever theme.gloves.model is null.
- * `mirror` flips the thumb and cuff so the two hands are not identical copies.
+ *
+ * Knuckles point along +Y -- the same convention the GLB uses, so one set of
+ * idle and wrist poses drives either glove. At rest that reads as a fist held
+ * up in guard; a zone's wrist rotation pitches it forward to lead the punch.
+ *
+ * `mirror` flips the thumb so the two hands are not identical copies.
  */
 function ProceduralGlove({ color, mirror }: { color: string; mirror: 1 | -1 }) {
   return (
@@ -25,18 +30,18 @@ function ProceduralGlove({ color, mirror }: { color: string; mirror: 1 | -1 }) {
         <meshStandardMaterial color={color} roughness={0.45} metalness={0.05} />
       </mesh>
 
-      {/* Knuckle face, flattened forward to give the fist a striking surface. */}
-      <mesh position={[0, 0.04, 0.26]} scale={[0.92, 0.78, 0.6]} castShadow>
+      {/* Knuckle face, flattened upward to give the fist a striking surface. */}
+      <mesh position={[0, 0.26, 0.04]} scale={[0.92, 0.6, 0.78]} castShadow>
         <sphereGeometry args={[0.5, 20, 16]} />
         <meshStandardMaterial color={color} roughness={0.45} metalness={0.05} />
       </mesh>
 
-      <mesh position={[0.34 * mirror, -0.18, 0.16]} rotation={[0.5, 0, 0.7 * mirror]} castShadow>
+      <mesh position={[0.34 * mirror, 0.16, 0.18]} rotation={[0, 0, -0.7 * mirror]} castShadow>
         <capsuleGeometry args={[0.15, 0.22, 4, 12]} />
         <meshStandardMaterial color={color} roughness={0.45} metalness={0.05} />
       </mesh>
 
-      <mesh position={[0, -0.1, -0.5]} rotation={[Math.PI / 2, 0, 0]} castShadow>
+      <mesh position={[0, -0.5, -0.1]} castShadow>
         <cylinderGeometry args={[0.34, 0.38, 0.42, 18]} />
         <meshStandardMaterial color={theme.gloves.cuffColor} roughness={0.7} />
       </mesh>
@@ -72,13 +77,24 @@ function GloveImpl({ side }: GloveProps) {
   // is only the pose before the first tick.
   return (
     <group ref={groupRef} rotation={[idle.rotation[0], idle.rotation[1], idle.rotation[2]]}>
-      <group scale={GLOVE.scale}>
-        {theme.gloves.model ? (
-          <ThemedModel url={theme.gloves.model} color={color} />
-        ) : (
+      {theme.gloves.model ? (
+        /* Mirrored for the left hand. Negative scale inverts winding, so the
+           material has to render both faces or the glove looks inside out. */
+        <group scale={[mirror, 1, 1]}>
+          <ThemedModel
+            url={theme.gloves.model}
+            color={color}
+            tintMaterials={theme.gloves.tintMaterials}
+            fitToSize={theme.gloves.modelSize}
+            rotation={theme.gloves.modelRotation}
+            doubleSided
+          />
+        </group>
+      ) : (
+        <group scale={GLOVE.scale}>
           <ProceduralGlove color={color} mirror={mirror} />
-        )}
-      </group>
+        </group>
+      )}
     </group>
   );
 }

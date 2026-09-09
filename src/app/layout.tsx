@@ -1,4 +1,6 @@
+import type { CSSProperties, ReactNode } from "react";
 import type { Metadata, Viewport } from "next";
+import { STAGE_ASPECT } from "@/config/scene";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -14,10 +16,14 @@ export const viewport: Viewport = {
   themeColor: "#171310",
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({ children }: { children: ReactNode }) {
+  // Exposed as a custom property so the portrait frame's one source of truth
+  // stays in config, not duplicated in the stylesheet.
+  const stageVars = { "--stage-aspect": STAGE_ASPECT } as CSSProperties;
+
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body style={stageVars}>{children}</body>
     </html>
   );
 }

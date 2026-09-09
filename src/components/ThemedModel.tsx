@@ -1,7 +1,7 @@
 "use client";
 
 import { useLayoutEffect, useMemo, useRef } from "react";
-import { Box3, Color, Mesh, MeshStandardMaterial, Vector3, type Group } from "three";
+import { Box3, Color, DoubleSide, Mesh, MeshStandardMaterial, Vector3, type Group } from "three";
 import { Clone, useGLTF } from "@react-three/drei";
 
 /** Scale and offset that hang a model between two heights in its parent. */
@@ -25,6 +25,12 @@ interface ThemedModelProps {
   tintMaterials?: readonly string[];
   /** Scale and position the model to span these heights. */
   fitToSpan?: FitSpan;
+  /** Scale so the model's largest dimension equals this, centred on origin. */
+  fitToSize?: number;
+  /** Orientation offset applied before fitting, to point an asset the right way. */
+  rotation?: readonly [number, number, number];
+  /** Render both faces. Required when an instance is mirrored by negative scale. */
+  doubleSided?: boolean;
   castShadow?: boolean;
 }
 
@@ -45,6 +51,9 @@ export function ThemedModel({
   color,
   tintMaterials,
   fitToSpan,
+  fitToSize,
+  rotation,
+  doubleSided = false,
   castShadow = true,
 }: ThemedModelProps) {
   const { scene } = useGLTF(url);
@@ -56,25 +65,42 @@ export function ThemedModel({
    * without someone having to measure it first.
    */
   const fit = useMemo(() => {
-    if (!fitToSpan) return null;
-
     scene.updateWorldMatrix(true, true);
     const box = new Box3().setFromObject(scene);
     const size = box.getSize(new Vector3());
-    if (size.y <= 0) return null;
-
-    const scale = (fitToSpan.top - fitToSpan.bottom) / size.y;
     const center = box.getCenter(new Vector3());
 
-    return {
-      scale,
-      position: [
-        -center.x * scale,
-        fitToSpan.top - box.max.y * scale,
-        -center.z * scale,
-      ] as [number, number, number],
-    };
-  }, [scene, fitToSpan]);
+    // Hung from a fixed point: pin the model's top and bottom to the span.
+    if (fitToSpan) {
+      if (size.y <= 0) return null;
+      const scale = (fitToSpan.top - fitToSpan.bottom) / size.y;
+      return {
+        scale,
+        position: [
+          -center.x * scale,
+          fitToSpan.top - box.max.y * scale,
+          -center.z * scale,
+        ] as [number, number, number],
+      };
+    }
+
+    // Held and swung: size it and centre it, so it rotates about itself.
+    if (fitToSize) {
+      const largest = Math.max(size.x, size.y, size.z);
+      if (largest <= 0) return null;
+      const scale = fitToSize / largest;
+      return {
+        scale,
+        position: [-center.x * scale, -center.y * scale, -center.z * scale] as [
+          number,
+          number,
+          number,
+        ],
+      };
+    }
+
+    return null;
+  }, [scene, fitToSpan, fitToSize]);
 
   useLayoutEffect(() => {
     const group = groupRef.current;
@@ -88,15 +114,24 @@ export function ThemedModel({
       const materials = Array.isArray(child.material) ? child.material : [child.material];
       for (const material of materials) {
         if (!(material instanceof MeshStandardMaterial)) continue;
+        if (doubleSided) material.side = DoubleSide;
         if (tintMaterials && !tintMaterials.includes(material.name)) continue;
         material.color.copy(tint);
       }
     });
-  }, [color, tintMaterials]);
+  }, [color, tintMaterials, doubleSided]);
 
+  /*
+   * Two groups, because order matters: the inner one centres and scales the
+   * model in its own frame, the outer one then turns the whole thing about the
+   * origin. Collapsing them would apply the centring offset in the rotated
+   * frame and throw the model off its pivot.
+   */
   return (
-    <group ref={groupRef} scale={fit?.scale ?? 1} position={fit?.position ?? [0, 0, 0]}>
-      <Clone object={scene} deep="materialsOnly" castShadow={castShadow} />
+    <group ref={groupRef} rotation={rotation ? [...rotation] : [0, 0, 0]}>
+      <group scale={fit?.scale ?? 1} position={fit?.position ?? [0, 0, 0]}>
+        <Clone object={scene} deep="materialsOnly" castShadow={castShadow} />
+      </group>
     </group>
   );
 }

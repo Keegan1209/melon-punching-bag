@@ -8,6 +8,7 @@ import { Glove } from "./Glove";
 import { useGameEngine } from "./GameProvider";
 import { Gym } from "./Gym";
 import { PunchingBag } from "./PunchingBag";
+import { WallBranding } from "./WallBranding";
 
 /**
  * The one place the simulation advances.
@@ -56,6 +57,7 @@ function SceneImpl() {
       <pointLight position={[0, 2.72, -2.2]} intensity={12} color="#ffe4c4" distance={10} />
 
       <Gym />
+      <WallBranding />
       <PunchingBag />
       <Glove side="left" />
       <Glove side="right" />

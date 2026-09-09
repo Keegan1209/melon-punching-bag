@@ -5,9 +5,9 @@
  * or a tuning number. Reskinning the experience should only ever mean editing
  * this file (or swapping the files it points at).
  *
- * Asset credit -- see CREDITS.md:
- * "Punching bag from Poly by Google" (https://skfb.ly/6YvUS) by IronEqual,
- * licensed under CC BY 4.0 (http://creativecommons.org/licenses/by/4.0/).
+ * Asset credits -- see CREDITS.md. Both models are CC BY 4.0:
+ * "Punching bag from Poly by Google" by IronEqual, and "Boxing Glove" by
+ * Incg5764 (http://creativecommons.org/licenses/by/4.0/).
  */
 
 export interface Theme {
@@ -26,7 +26,15 @@ export interface Theme {
   };
   gloves: {
     model: string | null;
+    /** Empty array keeps a textured model's own colours. */
     tintMaterials?: readonly string[];
+    /** Largest dimension of the glove model, in world units. */
+    modelSize: number;
+    /**
+     * Orientation offset for the model, so its knuckles lead the punch.
+     * A glove travels along -Z into the bag, so that is the way it must face.
+     */
+    modelRotation: readonly [number, number, number];
     leftColor: string;
     rightColor: string;
     cuffColor: string;
@@ -43,6 +51,19 @@ export interface Theme {
     fogFar: number;
     /** Optional .hdr for image-based lighting. Null = analytic lights only. */
     hdri: string | null;
+  };
+  /** Signage on the gym's back wall. Set `logo` to null to remove it. */
+  branding: {
+    logo: string | null;
+    /** Logo width in world units; its height follows the artwork's aspect. */
+    logoWidth: number;
+    /** Where the logo sits on the back wall, as [x, y] in world units. */
+    logoPosition: readonly [number, number];
+    /** The painted band the logo sits on. */
+    bandColor: string;
+    bandHeight: number;
+    /** Pinstripe along the band's lower edge. */
+    accentColor: string;
   };
   audio: {
     /** Sampled punches. Missing/failed files silently fall back to synthesis. */
@@ -66,7 +87,11 @@ export const theme: Theme = {
     swingStrength: 1.0,
   },
   gloves: {
-    model: null,
+    model: "/models/glove.glb",
+    // The model is textured, so tinting would multiply colour over artwork.
+    tintMaterials: [],
+    modelSize: 0.44,
+    modelRotation: [0, 0, 0],
     leftColor: "#D82E2E",
     rightColor: "#D82E2E",
     cuffColor: "#8E1B1B",
@@ -80,6 +105,16 @@ export const theme: Theme = {
     fogNear: 11,
     fogFar: 34,
     hdri: null,
+  },
+  branding: {
+    logo: "/branding/logo.svg",
+    logoWidth: 1.15,
+    // Offset left of centre: the bag hides the middle of the wall from the
+    // camera, so anything centred would be permanently behind it.
+    logoPosition: [-1.45, 2.16],
+    bandColor: "#141110",
+    bandHeight: 0.74,
+    accentColor: "#ED174C",
   },
   audio: {
     punch: ["/sounds/punch1.mp3", "/sounds/punch2.mp3", "/sounds/punch3.mp3"],

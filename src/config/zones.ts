@@ -24,7 +24,14 @@ export interface PunchZone {
   contactPoint: Vec3;
   /** Where the glove pulls back to before firing, relative to its idle pose. */
   windupOffset: Vec3;
-  /** Fist orientation at the moment of contact. */
+  /**
+   * Fist orientation at contact.
+   *
+   * A glove's knuckles point along its local +Y, so this is mostly a pitch of
+   * about -90 degrees, bringing the fist down and forward out of its guard.
+   * The per-zone variation is the angle of attack: hooks carry more roll,
+   * uppercuts to the base of the bag more pitch.
+   */
   wristRotation: Vec3;
   /** Lateral bow of the strike arc. Signed, in world units. */
   arc: Vec3;
@@ -77,7 +84,7 @@ export const PUNCH_ZONES: readonly PunchZone[] = [
     localAnchor: [-SPREAD.top, LOCAL_TIER_Y.top, BAG.radius],
     contactPoint: [-SPREAD.top, TIER_Y.top, CONTACT_Z],
     windupOffset: [-0.16, -0.1, 0.34],
-    wristRotation: [-0.5, 0.34, 0.16],
+    wristRotation: [-1.30, 0.30, 0.14],
     arc: [-0.16, 0.28, 0],
     impulseDirection: [0.3, -0.1, -1],
     impulseStrength: 0.92,
@@ -90,7 +97,7 @@ export const PUNCH_ZONES: readonly PunchZone[] = [
     localAnchor: [SPREAD.top, LOCAL_TIER_Y.top, BAG.radius],
     contactPoint: [SPREAD.top, TIER_Y.top, CONTACT_Z],
     windupOffset: [0.16, -0.1, 0.34],
-    wristRotation: [-0.5, -0.34, -0.16],
+    wristRotation: [-1.30, -0.30, -0.14],
     arc: [0.16, 0.28, 0],
     impulseDirection: [-0.3, -0.1, -1],
     impulseStrength: 0.92,
@@ -103,7 +110,7 @@ export const PUNCH_ZONES: readonly PunchZone[] = [
     localAnchor: [-SPREAD.middle, LOCAL_TIER_Y.middle, BAG.radius],
     contactPoint: [-SPREAD.middle, TIER_Y.middle, CONTACT_Z],
     windupOffset: [-0.2, -0.04, 0.38],
-    wristRotation: [-0.2, 0.22, 0.1],
+    wristRotation: [-1.46, 0.20, 0.10],
     arc: [-0.22, 0.16, 0],
     impulseDirection: [0.36, 0, -1],
     impulseStrength: 1.0,
@@ -116,7 +123,7 @@ export const PUNCH_ZONES: readonly PunchZone[] = [
     localAnchor: [SPREAD.middle, LOCAL_TIER_Y.middle, BAG.radius],
     contactPoint: [SPREAD.middle, TIER_Y.middle, CONTACT_Z],
     windupOffset: [0.2, -0.04, 0.38],
-    wristRotation: [-0.2, -0.22, -0.1],
+    wristRotation: [-1.46, -0.20, -0.10],
     arc: [0.22, 0.16, 0],
     impulseDirection: [-0.36, 0, -1],
     impulseStrength: 1.0,
@@ -129,7 +136,7 @@ export const PUNCH_ZONES: readonly PunchZone[] = [
     localAnchor: [-SPREAD.bottom, LOCAL_TIER_Y.bottom, BAG.radius],
     contactPoint: [-SPREAD.bottom, TIER_Y.bottom, CONTACT_Z],
     windupOffset: [-0.22, 0.06, 0.32],
-    wristRotation: [0.24, 0.16, 0.34],
+    wristRotation: [-1.62, 0.14, 0.28],
     arc: [-0.18, -0.06, 0],
     impulseDirection: [0.28, 0.12, -1],
     impulseStrength: 1.06,
@@ -142,7 +149,7 @@ export const PUNCH_ZONES: readonly PunchZone[] = [
     localAnchor: [SPREAD.bottom, LOCAL_TIER_Y.bottom, BAG.radius],
     contactPoint: [SPREAD.bottom, TIER_Y.bottom, CONTACT_Z],
     windupOffset: [0.22, 0.06, 0.32],
-    wristRotation: [0.24, -0.16, -0.34],
+    wristRotation: [-1.62, -0.14, -0.28],
     arc: [0.18, -0.06, 0],
     impulseDirection: [-0.28, 0.12, -1],
     impulseStrength: 1.06,

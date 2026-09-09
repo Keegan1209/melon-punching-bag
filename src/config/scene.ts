@@ -130,6 +130,22 @@ export const GLOVE = {
  * edges into empty space, at any viewport aspect. It is a single box, so the
  * extra size costs nothing.
  */
+/**
+ * The experience is portrait-only, on every device.
+ *
+ * The canvas is locked to a phone-shaped frame and centred, rather than
+ * filling the window: this is designed as a mobile interaction, and a desktop
+ * browser gets the same composition instead of a stretched variant nobody
+ * tuned. Camera framing therefore only ever has one aspect to solve for.
+ */
+export const STAGE = {
+  aspectWidth: 9,
+  aspectHeight: 19.5,
+} as const;
+
+/** Width / height. CSS sizes the frame from this. */
+export const STAGE_ASPECT = STAGE.aspectWidth / STAGE.aspectHeight;
+
 export const ROOM = {
   width: 16,
   depth: 16,
