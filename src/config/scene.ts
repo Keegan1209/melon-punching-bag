@@ -198,6 +198,15 @@ export const ROOM = {
   /** Floor plane height. The room box extends below it to avoid seams. */
   floorY: -0.5,
   /**
+   * How far the shell is sunk below the floor plane.
+   *
+   * Without it the box's bottom face is exactly coplanar with the floor, and
+   * the two z-fight: while the camera is still one surface wins consistently
+   * and nothing shows, but any camera movement flips the winner per pixel per
+   * frame and the ground shimmers.
+   */
+  shellSink: 0.1,
+  /**
    * Visible ceiling, set just above the bag's pivot so the chain reads as
    * bolted into it. Independent of `height`, which only sizes the shell.
    */

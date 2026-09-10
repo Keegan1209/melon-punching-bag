@@ -13,20 +13,25 @@ import { theme } from "@/config/theme";
  * larger than the visible room so the camera can never see past its edges at
  * any aspect ratio; the floor and ceiling planes below define what you
  * actually see, and the shell only ever supplies the walls between them.
+ *
+ * The shell is sunk below the floor plane rather than meeting it. Coplanar
+ * surfaces z-fight, and that only becomes visible once the camera moves.
  */
 function GymImpl() {
   const { floorColor, wallColor, ceilingColor } = theme.environment;
 
   return (
     <group>
-      <mesh position={[0, ROOM.height / 2 + ROOM.floorY, 0]}>
+      <mesh position={[0, ROOM.height / 2 + ROOM.floorY - ROOM.shellSink, 0]}>
         <boxGeometry args={[ROOM.width, ROOM.height, ROOM.depth]} />
         <meshStandardMaterial color={wallColor} side={BackSide} roughness={0.95} />
       </mesh>
 
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, ROOM.floorY, 0]} receiveShadow>
         <planeGeometry args={[ROOM.width, ROOM.depth]} />
-        <meshStandardMaterial color={floorColor} roughness={0.8} metalness={0.05} />
+        {/* Fully non-metallic: any specular term shifts with the camera, which
+            would shimmer during the shake even without the z-fighting. */}
+        <meshStandardMaterial color={floorColor} roughness={0.95} metalness={0} />
       </mesh>
 
       <mesh rotation={[Math.PI / 2, 0, 0]} position={[0, ROOM.ceilingY, 0]}>

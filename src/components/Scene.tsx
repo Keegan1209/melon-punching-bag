@@ -35,6 +35,9 @@ function SceneImpl() {
 
       <ambientLight intensity={0.72} />
       <hemisphereLight intensity={0.5} groundColor={theme.environment.floorColor} />
+      {/* normalBias offsets the shadow lookup along the surface normal, which
+          is what stops a large flat floor stippling itself as the camera
+          moves; the tighter shadow camera raises texel density for free. */}
       <directionalLight
         position={[2.6, 4.6, 3.2]}
         intensity={1.7}
@@ -42,11 +45,12 @@ function SceneImpl() {
         shadow-mapSize={[1024, 1024]}
         shadow-camera-near={0.5}
         shadow-camera-far={12}
-        shadow-camera-left={-3}
-        shadow-camera-right={3}
-        shadow-camera-top={4}
+        shadow-camera-left={-2.6}
+        shadow-camera-right={2.6}
+        shadow-camera-top={3.6}
         shadow-camera-bottom={-1}
-        shadow-bias={-0.0008}
+        shadow-bias={-0.0006}
+        shadow-normalBias={0.03}
       />
       {/* Cool rim from behind so the bag separates from the back wall. */}
       <pointLight position={[-2.4, 2.6, -2.2]} intensity={14} color="#9fb4ff" distance={11} />
