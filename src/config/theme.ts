@@ -58,7 +58,7 @@ export interface Theme {
     /** Optional .hdr for image-based lighting. Null = analytic lights only. */
     hdri: string | null;
   };
-  /** Signage on the gym's back wall. Set `logo` to null to remove it. */
+  /** Signage on the gym's back wall. `logo: null` removes the whole sign. */
   branding: {
     logo: string | null;
     /**
@@ -120,7 +120,7 @@ export const theme: Theme = {
     hdri: null,
   },
   branding: {
-    logo: "/branding/logo.svg",
+    logo: null,
     logoWidth: 1.02,
     // Offset left of centre: the bag hides the middle of the wall from the
     // camera, so anything centred would be permanently behind it. Pushed

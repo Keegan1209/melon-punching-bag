@@ -23,6 +23,10 @@ function WallBrandingImpl() {
   const { logo, logoWidth, logoPosition, bandColor, bandHeight, accentColor } = theme.branding;
   const texture = useSvgTexture(logo, 512);
 
+  // The band and pinstripe exist only to carry the mark, so no logo means no
+  // signage at all rather than an unexplained painted stripe.
+  if (!logo) return null;
+
   const wallZ = -ROOM.depth / 2;
   const [logoX, logoY] = logoPosition;
 

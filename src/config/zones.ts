@@ -14,8 +14,18 @@ import { BAG, BAG_CENTER_Y, BAG_HALF_HEIGHT, CONTACT_Z } from "./scene";
 export type GloveSide = "left" | "right";
 export type Vec3 = readonly [number, number, number];
 
+/**
+ * The shape of a punch, decided by which tier of the bag was hit.
+ *
+ * Low on the bag is where a fighter throws an uppercut, the middle is where a
+ * straight lands, and high is hook range. Mapping the tiers this way means the
+ * punch you get is the one the tap implies, without the player choosing.
+ */
+export type PunchArchetype = "cross" | "hook" | "uppercut";
+
 export interface PunchZone {
   id: string;
+  archetype: PunchArchetype;
   /** Which hand throws this punch. */
   glove: GloveSide;
   /** Zone centre in bag-local space, used for nearest-zone classification. */
@@ -78,39 +88,56 @@ const SPREAD = {
 } as const;
 
 export const PUNCH_ZONES: readonly PunchZone[] = [
+  /*
+   * HOOKS -- high on the bag.
+   *
+   * Swing wide outside, arc back in across the body, wrist rolling over so the
+   * palm finishes downward. The contact sits round the shoulder of the bag
+   * rather than square on its face, and the impulse is mostly lateral, which
+   * is what sets the bag turning as well as swinging.
+   */
   {
     id: "top-left",
+    archetype: "hook",
     glove: "left",
     localAnchor: [-SPREAD.top, LOCAL_TIER_Y.top, BAG.radius],
-    contactPoint: [-SPREAD.top, TIER_Y.top, CONTACT_Z],
-    windupOffset: [-0.16, -0.1, 0.34],
-    wristRotation: [-1.30, 0.30, 0.14],
-    arc: [-0.16, 0.28, 0],
-    impulseDirection: [0.3, -0.1, -1],
-    impulseStrength: 0.92,
-    duration: 0.44,
-    contactAt: 0.48,
+    contactPoint: [-SPREAD.top * 1.25, TIER_Y.top, CONTACT_Z * 0.82],
+    windupOffset: [-0.34, 0.02, 0.26],
+    wristRotation: [-1.35, 0.62, -0.3],
+    arc: [-0.38, 0.16, 0.06],
+    impulseDirection: [0.8, -0.05, -0.62],
+    impulseStrength: 1.18,
+    duration: 0.46,
+    contactAt: 0.5,
   },
   {
     id: "top-right",
+    archetype: "hook",
     glove: "right",
     localAnchor: [SPREAD.top, LOCAL_TIER_Y.top, BAG.radius],
-    contactPoint: [SPREAD.top, TIER_Y.top, CONTACT_Z],
-    windupOffset: [0.16, -0.1, 0.34],
-    wristRotation: [-1.30, -0.30, -0.14],
-    arc: [0.16, 0.28, 0],
-    impulseDirection: [-0.3, -0.1, -1],
-    impulseStrength: 0.92,
-    duration: 0.44,
-    contactAt: 0.48,
+    contactPoint: [SPREAD.top * 1.25, TIER_Y.top, CONTACT_Z * 0.82],
+    windupOffset: [0.34, 0.02, 0.26],
+    wristRotation: [-1.35, -0.62, 0.3],
+    arc: [0.38, 0.16, 0.06],
+    impulseDirection: [-0.8, -0.05, -0.62],
+    impulseStrength: 1.18,
+    duration: 0.46,
+    contactAt: 0.5,
   },
+
+  /*
+   * CROSSES -- the middle of the bag. Left untouched: this is the straight
+   * punch the movement was tuned around, and the other two are built to differ
+   * from it rather than to replace it.
+   */
   {
     id: "middle-left",
+    archetype: "cross",
     glove: "left",
     localAnchor: [-SPREAD.middle, LOCAL_TIER_Y.middle, BAG.radius],
     contactPoint: [-SPREAD.middle, TIER_Y.middle, CONTACT_Z],
     windupOffset: [-0.2, -0.04, 0.38],
-    wristRotation: [-1.46, 0.20, 0.10],
+    wristRotation: [-1.46, 0.2, 0.1],
     arc: [-0.22, 0.16, 0],
     impulseDirection: [0.36, 0, -1],
     impulseStrength: 1.0,
@@ -119,42 +146,54 @@ export const PUNCH_ZONES: readonly PunchZone[] = [
   },
   {
     id: "middle-right",
+    archetype: "cross",
     glove: "right",
     localAnchor: [SPREAD.middle, LOCAL_TIER_Y.middle, BAG.radius],
     contactPoint: [SPREAD.middle, TIER_Y.middle, CONTACT_Z],
     windupOffset: [0.2, -0.04, 0.38],
-    wristRotation: [-1.46, -0.20, -0.10],
+    wristRotation: [-1.46, -0.2, -0.1],
     arc: [0.22, 0.16, 0],
     impulseDirection: [-0.36, 0, -1],
     impulseStrength: 1.0,
     duration: 0.4,
     contactAt: 0.48,
   },
+
+  /*
+   * UPPERCUTS -- low on the bag.
+   *
+   * Drop the hand, then drive up under the bag with the knuckles still facing
+   * skyward, so the wrist barely pitches over. Most of the force goes upward,
+   * which swings the bag less than a straight does but kicks it up the chain --
+   * without that vertical give an uppercut would land softer than a jab.
+   */
   {
     id: "bottom-left",
+    archetype: "uppercut",
     glove: "left",
     localAnchor: [-SPREAD.bottom, LOCAL_TIER_Y.bottom, BAG.radius],
-    contactPoint: [-SPREAD.bottom, TIER_Y.bottom, CONTACT_Z],
-    windupOffset: [-0.22, 0.06, 0.32],
-    wristRotation: [-1.62, 0.14, 0.28],
-    arc: [-0.18, -0.06, 0],
-    impulseDirection: [0.28, 0.12, -1],
-    impulseStrength: 1.06,
-    duration: 0.42,
-    contactAt: 0.5,
+    contactPoint: [-SPREAD.bottom * 0.55, TIER_Y.bottom - 0.06, CONTACT_Z * 0.9],
+    windupOffset: [-0.1, -0.34, 0.26],
+    wristRotation: [-0.55, 0.16, 0.1],
+    arc: [-0.04, 0.5, 0.12],
+    impulseDirection: [0.16, 0.62, -0.82],
+    impulseStrength: 1.08,
+    duration: 0.48,
+    contactAt: 0.54,
   },
   {
     id: "bottom-right",
+    archetype: "uppercut",
     glove: "right",
     localAnchor: [SPREAD.bottom, LOCAL_TIER_Y.bottom, BAG.radius],
-    contactPoint: [SPREAD.bottom, TIER_Y.bottom, CONTACT_Z],
-    windupOffset: [0.22, 0.06, 0.32],
-    wristRotation: [-1.62, -0.14, -0.28],
-    arc: [0.18, -0.06, 0],
-    impulseDirection: [-0.28, 0.12, -1],
-    impulseStrength: 1.06,
-    duration: 0.42,
-    contactAt: 0.5,
+    contactPoint: [SPREAD.bottom * 0.55, TIER_Y.bottom - 0.06, CONTACT_Z * 0.9],
+    windupOffset: [0.1, -0.34, 0.26],
+    wristRotation: [-0.55, -0.16, -0.1],
+    arc: [0.04, 0.5, 0.12],
+    impulseDirection: [-0.16, 0.62, -0.82],
+    impulseStrength: 1.08,
+    duration: 0.48,
+    contactAt: 0.54,
   },
 ];
 

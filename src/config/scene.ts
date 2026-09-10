@@ -84,6 +84,54 @@ export const PHYSICS = {
     damping: 7.5,
     amplitude: 0.02,
   },
+
+  /**
+   * Twist about the vertical. A chain resists rotation only weakly, so this
+   * has a soft spring and unwinds slowly. It is what makes a hook read as a
+   * hook: a straight punch barely twists the bag, a hook spins it.
+   */
+  twist: {
+    inertia: 45,
+    stiffness: 5.5,
+    damping: 1.9,
+    maxAngle: 0.5,
+  },
+
+  /**
+   * Vertical kick. The bag can rise on its chain and drop back, which is the
+   * only way an uppercut can read -- its force is mostly upward, and a
+   * swing-only bag would simply absorb it and look weaker than a jab.
+   */
+  lift: {
+    mass: 26,
+    stiffness: 210,
+    damping: 6.0,
+    maxOffset: 0.14,
+  },
+} as const;
+
+/**
+ * What a landed punch does to the picture, as opposed to what it does to the
+ * bag's position. Tuned to be felt rather than noticed.
+ */
+export const IMPACT = {
+  /** Camera kick. Positional, not rotational -- a rotational shake at this
+   *  field of view reads as a glitch rather than a hit. */
+  shake: {
+    amplitude: 0.05,
+    frequency: 38,
+    damping: 13,
+  },
+  /**
+   * Bag compression. The bag squashes along the axis it was hit and bulges
+   * across it, then rebounds. Whole-body scaling is a cartoon of what really
+   * happens locally, but at this size it reads as the bag absorbing weight.
+   */
+  squash: {
+    amplitude: 0.16,
+    frequency: 26,
+    damping: 11,
+  },
 } as const;
 
 export const CAMERA = {

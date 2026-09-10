@@ -53,10 +53,15 @@ function PunchingBagImpl() {
   const engine = useGameEngine();
   const pivotRef = useRef<Group>(null);
   const bodyRef = useRef<Group>(null);
+  const squashRef = useRef<Group>(null);
 
   useEffect(() => {
     engine.bindBagPivot(pivotRef.current);
-    return () => engine.bindBagPivot(null);
+    engine.bindBagSquash(squashRef.current);
+    return () => {
+      engine.bindBagPivot(null);
+      engine.bindBagSquash(null);
+    };
   }, [engine]);
 
   /**
@@ -92,17 +97,22 @@ function PunchingBagImpl() {
     <group position={[0, BAG.pivotY, 0]} ref={pivotRef}>
       {!theme.bag.model && <ProceduralChain />}
 
+      {/* Compression lives on an inner group so the group the raycast resolves
+          into is never scaled -- otherwise a tap during a squash would be
+          classified against a distorted bag. */}
       <group ref={bodyRef} position={[0, -BAG_COM_OFFSET, 0]} onPointerDown={handlePointerDown}>
-        {theme.bag.model ? (
-          <ThemedModel
-            url={theme.bag.model}
-            color={theme.bag.color}
-            tintMaterials={theme.bag.tintMaterials}
-            fitToSpan={fitToSpan}
-          />
-        ) : (
-          <ProceduralBag />
-        )}
+        <group ref={squashRef}>
+          {theme.bag.model ? (
+            <ThemedModel
+              url={theme.bag.model}
+              color={theme.bag.color}
+              tintMaterials={theme.bag.tintMaterials}
+              fitToSpan={fitToSpan}
+            />
+          ) : (
+            <ProceduralBag />
+          )}
+        </group>
       </group>
     </group>
   );

@@ -1,10 +1,11 @@
-import { Vector3, type Euler, type Object3D } from "three";
+import { Vector3, type Camera, type Euler, type Object3D } from "three";
 import { BAG } from "@/config/scene";
 import { theme } from "@/config/theme";
 import { findNearestZone, type GloveSide, type PunchZone } from "@/config/zones";
 import { useGameStore } from "@/store/useGameStore";
 import { AudioEngine } from "./audio";
 import { BagPendulum } from "./BagPendulum";
+import { CameraShake } from "./CameraShake";
 import { triggerHaptic } from "./haptics";
 import { PunchAnimator } from "./PunchAnimator";
 
@@ -30,9 +31,17 @@ interface GloveBinding {
 export class GameEngine {
   readonly bag = new BagPendulum();
   readonly audio = new AudioEngine();
+  readonly shake = new CameraShake();
 
   private readonly gloves = new Map<GloveSide, GloveBinding>();
   private bagPivot: Object3D | null = null;
+  /** Separate from the pivot so hit-testing is never done against a squashed
+   *  bag: compression is applied below the group the raycast resolves into. */
+  private bagSquash: Object3D | null = null;
+  private camera: Camera | null = null;
+  /** The rig's framing position; shake is applied as an offset from it. */
+  private readonly cameraBase = new Vector3();
+  private readonly squashScale = { x: 1, y: 1, z: 1 };
 
   /**
    * Idle poses resolved from the viewport by the camera rig.
@@ -71,6 +80,16 @@ export class GameEngine {
     this.bagPivot = object;
   }
 
+  bindBagSquash(object: Object3D | null): void {
+    this.bagSquash = object;
+  }
+
+  /** Called by the camera rig whenever it re-frames the scene. */
+  bindCamera(camera: Camera | null, basePosition?: Vector3): void {
+    this.camera = camera;
+    if (basePosition) this.cameraBase.copy(basePosition);
+  }
+
   /**
    * Route a hit on the bag, given in bag-local coordinates, to the right glove.
    * The raycast result only ever chooses a zone -- it never aims the fist.
@@ -99,6 +118,7 @@ export class GameEngine {
     );
 
     this.audio.play(zone.impulseStrength);
+    this.shake.impulse(zone.impulseStrength * theme.bag.swingStrength);
     triggerHaptic();
     useGameStore.getState().registerPunch(zone.id);
   };
@@ -112,10 +132,22 @@ export class GameEngine {
     }
 
     this.bag.update(delta);
+    this.shake.update(delta);
 
     if (this.bagPivot) {
       this.bagPivot.rotation.x = this.bag.angleX + this.bag.wobble;
       this.bagPivot.rotation.z = this.bag.angleZ;
+      this.bagPivot.rotation.y = this.bag.angleY;
+      this.bagPivot.position.y = BAG.pivotY + this.bag.liftOffset;
+    }
+
+    if (this.bagSquash) {
+      this.bag.getSquashScale(this.squashScale);
+      this.bagSquash.scale.set(this.squashScale.x, this.squashScale.y, this.squashScale.z);
+    }
+
+    if (this.camera) {
+      this.camera.position.copy(this.cameraBase).add(this.shake.value);
     }
   }
 
@@ -123,5 +155,7 @@ export class GameEngine {
     this.audio.dispose();
     this.gloves.clear();
     this.bagPivot = null;
+    this.bagSquash = null;
+    this.camera = null;
   }
 }

@@ -49,6 +49,10 @@ contact point, impulse — so every hit lands on a path someone chose. Chasing t
 exact tap coordinate produces stretched, unnatural glove motion; this keeps
 every punch cinematic while still feeling like you hit where you tapped.
 
+**The tier you hit decides the punch.** Low on the bag throws an uppercut, the
+middle a cross, high a hook — the three places a fighter would actually throw
+each. The player never picks; the tap implies it.
+
 Physics is slaved to the animation clock, never to the tap. The impulse is
 applied on the exact frame the fist reaches the bag, along with the sound and
 the haptic pulse.
@@ -118,6 +122,35 @@ The tightest constraint is the strip of back wall between the bag's silhouette
 and the frame edge, where the logo sits. It is narrowest on the tallest phones,
 so `branding.logoWidth` and `logoPosition` are sized for that case. Moving the
 camera closer widens the cone the bag hides and squeezes that strip further.
+
+## What a landed punch does
+
+Each archetype moves the bag differently, and all of it falls out of the
+impulse rather than being animated separately:
+
+| | swing | lateral | twist | lift | squashes |
+|---|---|---|---|---|---|
+| Cross | 8.9° | 3.2° | 1.5° | — | depth |
+| Hook | 4.8° | 6.1° | 2.5° | — | width |
+| Uppercut | 8.9° | 1.6° | 0.6° | 7.4 cm | depth |
+
+Three degrees of freedom exist purely so the punches can differ:
+
+- **Twist** is what makes a hook read as a hook. It has a soft spring, because
+  a chain resists rotation only weakly, so the bag keeps turning after the hit.
+- **Lift** is what makes an uppercut land. Most of an uppercut's force is
+  upward, so on a swing-only bag it would be absorbed and read *softer* than a
+  jab. Letting the bag ride up its chain and drop back fixes that.
+- **Squash** compresses the bag along the axis it was hit and bulges it across,
+  so a cross drives it back and a hook drives it sideways. It rebounds slightly
+  past its resting shape, which is what reads as springy rather than dented.
+
+The camera also takes a short positional kick. Positional, not rotational — at
+this field of view a rotational shake swings the whole room and reads as a
+glitch rather than a hit.
+
+All of it is in `IMPACT` and `PHYSICS` in `src/config/scene.ts`, and everything
+returns to exact neutral once spent.
 
 ## Glove orientation
 

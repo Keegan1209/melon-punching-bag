@@ -44,6 +44,10 @@ export function CameraRig() {
     camera.updateProjectionMatrix();
     camera.updateMatrixWorld();
 
+    // The engine owns the camera's position from here on, adding shake as an
+    // offset from this base; the rig only decides where the base is.
+    engine.bindCamera(camera, camera.position);
+
     for (const side of ["left", "right"] as const) {
       const anchor = GLOVE.idle[side];
       resolveViewportAnchor(camera, anchor.screen[0], anchor.screen[1], anchor.depth, scratch);
